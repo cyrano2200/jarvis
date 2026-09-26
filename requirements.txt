@@ -1,0 +1,35 @@
+# ---- core ----
+PyYAML>=6.0
+python-dotenv>=1.0
+requests>=2.31
+psutil>=5.9
+numpy>=1.24
+
+# ---- voice input ----
+SpeechRecognition>=3.10
+audioop-lts>=0.2; python_version >= "3.13"   # audioop was removed in Python 3.13
+PyAudio>=0.2.14          # Linux: sudo apt install portaudio19-dev ; macOS: brew install portaudio
+faster-whisper>=1.0      # offline speech-to-text (downloads model on first run)
+
+# ---- voice output ----
+edge-tts>=6.1            # neural British voice (needs internet)
+pygame>=2.5              # plays edge-tts audio
+pyttsx3>=2.90            # offline fallback voice
+
+# ---- system control ----
+pyautogui>=0.9.54
+send2trash>=1.8
+screen-brightness-control>=0.20
+pycaw>=20230407; sys_platform == "win32"
+comtypes>=1.2; sys_platform == "win32"
+
+# ---- web ----
+beautifulsoup4>=4.12
+ddgs>=9.0
+
+# ---- tray ----
+pystray>=0.19
+Pillow>=10.0
+
+# ---- optional (uncomment if needed) ----
+# paho-mqtt>=1.6         # MQTT smart-home publishing

@@ -1,0 +1,118 @@
+# =====================  JARVIS CONFIGURATION  =====================
+# Anything you omit falls back to a sensible default (see jarvis_core/config.py).
+# Secrets (API keys, passwords) belong in .env, not here.
+
+user_name: "Sir"            # how Jarvis addresses you: "Sir", "Ma'am", "Boss", "Tony"...
+assistant_name: "Jarvis"    # the wake word. Change to anything, e.g. "Friday".
+
+wake:
+  # Extra mis-hearings that should also wake him (fuzzy matching is on as well).
+  aliases: [jarvis, jarves, jervis, jarvas, jarvus, garvis, gervis, gervais, charvis, jarvie, travis]
+  # Words allowed before the name: "hi jarvis", "okay jarvis", "wake up jarvis"
+  fillers: [hi, hey, hay, hello, okay, ok, yo, wake, up, a, oh, so]
+  fuzzy_threshold: 0.78     # lower = more forgiving, more false wakes
+  sleep_phrases: ["that's all", "that is all", sleep, "go to sleep", standby, "stand by", dismissed]
+  awake_timeout_seconds: 0  # 0 = stay awake until you say "sleep"; e.g. 120 = auto-sleep after 2 min
+
+speech:
+  stt:
+    engine: whisper         # whisper = offline (faster-whisper) | google = online, no setup
+    whisper_model: tiny.en  # tiny.en (fastest) < base.en < small.en (most accurate)
+    device: cpu             # cpu | cuda (NVIDIA GPU) — current CTranslate2 wheel is CPU-only
+    compute_type: int8      # int8 for CPU, float16 for GPU
+    language: en
+    mic_index: null         # find yours with: python jarvis.py --list-mics
+    energy_threshold: 400   # was auto (~60–90), which kept the mic open on room noise
+    pause_threshold: 0.45   # seconds of silence that ends a phrase
+    phrase_time_limit: 8    # was 20; long recordings feel like Jarvis is ignoring you
+  tts:
+    engine: edge            # edge = Microsoft neural voices (internet) | pyttsx3 = fully offline
+    edge_voice: en-GB-RyanNeural   # try en-GB-ThomasNeural, en-GB-AlfieNeural, en-AU-WilliamNeural
+    edge_rate: "+0%"        # e.g. "-10%" slower, "+10%" faster
+    edge_pitch: "-4Hz"      # slightly deeper
+    edge_volume: "+0%"
+    pyttsx3_voice_hint: "british|george|hazel|daniel|uk"
+    pyttsx3_rate: 175
+
+llm:
+  provider_order: [anthropic, ollama, lmstudio, groq, openai]   # Claude first (fast); Ollama is fallback
+  temperature: 0.4
+  max_steps: 8
+  timeout: 90
+  ollama:
+    base_url: http://localhost:11434
+    model: llama3.1:8b      # `ollama pull llama3.1:8b`. Also good: qwen2.5:7b, mistral-nemo
+  lmstudio:
+    base_url: http://localhost:1234/v1
+    model: local-model      # whatever is loaded in LM Studio's local server
+  openai:
+    model: gpt-4o-mini
+  groq:
+    model: llama-3.3-70b-versatile
+  anthropic:
+    model: claude-sonnet-5
+  # API keys go in .env: OPENAI_API_KEY, GROQ_API_KEY, ANTHROPIC_API_KEY
+
+memory:
+  max_turns: 12
+  save_sessions: true
+
+paths:
+  notes_dir: ~/Documents/Jarvis/Notes
+  workspace_dir: ~/Documents/Jarvis/Workspace      # where research/files Jarvis writes are saved
+  screenshots_dir: ~/Pictures/Jarvis
+  search_roots: [~/Documents, ~/Desktop, ~/Downloads, ~/Pictures]   # folders searched for files
+
+# Your own launch shortcuts (spoken name -> command/path/URL)
+apps:
+  # "my editor": 'C:\Tools\MyEditor\editor.exe'
+  # "game": 'C:\Program Files (x86)\Steam\steam.exe'
+websites:
+  # "work": https://intranet.example.com
+  # "jira": https://mycompany.atlassian.net
+
+weather:
+  default_city: "Casablanca"          # blank = detect from your IP address
+  units: metric             # metric | imperial
+
+location:
+  default_area: "Casablanca"   # used for nearby food and maps when you don't name a city
+
+email:                       # password goes in .env as EMAIL_PASSWORD (use an app password for Gmail)
+  smtp_host: smtp.gmail.com
+  smtp_port: 465
+  username: ""
+  from_addr: ""
+  contacts:
+    # mum: mum@example.com
+
+telegram:
+  chat_id: ""                # token goes in .env as TELEGRAM_BOT_TOKEN
+
+home_assistant:
+  enabled: false
+  url: http://homeassistant.local:8123   # token goes in .env as HA_TOKEN
+  entities:
+    # "living room light": light.living_room
+    # "front door": lock.front_door
+
+mqtt:
+  enabled: false
+  host: localhost
+  port: 1883
+  username: ""
+  topics:
+    # "garage door": home/garage/set
+
+safety:
+  confirm_destructive: true     # keep this true!
+  allow_dangerous_shell: false  # true = dangerous commands become possible (still confirmed)
+  shell_timeout: 30
+
+face:
+  enabled: true
+  size: 140                     # pixels. Drag to reposition; double-click to wake.
+
+phone:
+  enabled: true
+  port: 8742                    # iPhone: Safari → http://<this-pc-ip>:8742 → Add to Home Screen

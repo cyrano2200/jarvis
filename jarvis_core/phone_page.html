@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jarvis">
+  <meta name="theme-color" content="#031018">
+  <link rel="apple-touch-icon" href="/icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>Jarvis</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: #031018; color: #d7f6ff; font-family: -apple-system, system-ui, sans-serif; }
+    body { display: flex; flex-direction: column; padding: env(safe-area-inset-top) 14px calc(12px + env(safe-area-inset-bottom)); }
+    header { text-align: center; padding: 10px 0 8px; }
+    header h1 { margin: 0; font-size: 15px; letter-spacing: .28em; font-weight: 600; color: #7ae7ff; }
+    header p { margin: 4px 0 0; font-size: 12px; color: #6aa8b8; }
+    #log { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 8px; padding: 8px 2px 12px; }
+    .bubble { max-width: 86%; padding: 10px 12px; border-radius: 14px; font-size: 16px; line-height: 1.35; }
+    .you { align-self: flex-end; background: #0a3a4a; }
+    .jarvis { align-self: flex-start; background: #072230; border: 1px solid #13485a; }
+    form { display: flex; gap: 8px; align-items: center; }
+    input[type=text] { flex: 1; background: #071820; border: 1px solid #1a4d5e; color: #e8fbff; border-radius: 22px; padding: 12px 14px; font-size: 16px; }
+    button { border: 0; border-radius: 22px; padding: 12px 14px; background: #00b4d8; color: #031018; font-weight: 700; font-size: 15px; }
+    #mic { background: #08323f; color: #7ae7ff; min-width: 48px; }
+    #mic.live { background: #00b4d8; color: #031018; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>JARVIS</h1>
+    <p id="hint">Same Wi‑Fi as your PC. Hold the mic, or type.</p>
+  </header>
+  <div id="log"></div>
+  <form id="f">
+    <button type="button" id="mic" aria-label="Speak">mic</button>
+    <input id="q" type="text" enterkeyhint="send" autocomplete="off" placeholder="Command…">
+    <button type="submit">Send</button>
+  </form>
+  <script>
+    const log = document.getElementById('log');
+    const q = document.getElementById('q');
+    const mic = document.getElementById('mic');
+    let since = 0;
+    function add(cls, text) {
+      const d = document.createElement('div');
+      d.className = 'bubble ' + cls;
+      d.textContent = text;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+    }
+    async function send(text) {
+      text = (text || '').trim();
+      if (!text) return;
+      add('you', text);
+      q.value = '';
+      await fetch('/api/command', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text}) });
+    }
+    document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); send(q.value); });
+    async function poll() {
+      try {
+        const r = await fetch('/api/replies?since=' + since);
+        const data = await r.json();
+        since = data.since;
+        (data.messages || []).forEach(m => add('jarvis', m));
+      } catch (e) {}
+      setTimeout(poll, 900);
+    }
+    poll();
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      mic.style.display = 'none';
+      document.getElementById('hint').textContent = 'Type a command. Voice needs Safari.';
+    } else {
+      const rec = new SR();
+      rec.lang = 'en-GB';
+      rec.interimResults = false;
+      rec.onresult = e => send(e.results[0][0].transcript);
+      rec.onerror = () => mic.classList.remove('live');
+      rec.onend = () => mic.classList.remove('live');
+      mic.onclick = () => { try { rec.start(); mic.classList.add('live'); } catch (e) {} };
+    }
+  </script>
+</body>
+</html>
